@@ -29,7 +29,7 @@ function AppInner() {
     if (postId) {
       navigate(`/?post=${postId}`)
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

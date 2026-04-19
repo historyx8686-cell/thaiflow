@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base = declarative_base()
 
@@ -15,7 +15,7 @@ class Post(Base):
     photos = Column(JSON, default=[])
     price = Column(String, nullable=True)
     rooms = Column(String, nullable=True)
-    posted_at = Column(DateTime, default=datetime.utcnow)
+    posted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     tg_link = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     views = Column(Integer, default=0)

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
 from contextlib import asynccontextmanager
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 from database import init_db, get_db
@@ -44,7 +44,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price="12000",
             rooms="студия",
-            posted_at=datetime.utcnow() - timedelta(hours=2),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=2),
             tg_link="https://t.me/pattaya_nedvizhimost/1001",
             is_active=True,
             views=145
@@ -58,7 +58,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price="25000",
             rooms="3 спальни",
-            posted_at=datetime.utcnow() - timedelta(hours=5),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=5),
             tg_link="https://t.me/pattaya_rent_buy/1002",
             is_active=True,
             views=89
@@ -72,7 +72,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price=None,
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(hours=8),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=8),
             tg_link="https://t.me/pattaya_job/2001",
             is_active=True,
             views=212
@@ -86,7 +86,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price=None,
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(hours=12),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=12),
             tg_link="https://t.me/pattaya_services/3001",
             is_active=True,
             views=67
@@ -100,7 +100,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price="300",
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(hours=15),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=15),
             tg_link="https://t.me/pattayarent/4001",
             is_active=True,
             views=178
@@ -114,7 +114,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price=None,
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(hours=20),
+            posted_at=datetime.now(timezone.utc) - timedelta(hours=20),
             tg_link="https://t.me/pattaya_events/5001",
             is_active=True,
             views=543
@@ -128,7 +128,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price="85000",
             rooms="3 спальни",
-            posted_at=datetime.utcnow() - timedelta(days=1, hours=3),
+            posted_at=datetime.now(timezone.utc) - timedelta(days=1, hours=3),
             tg_link="https://t.me/phuket_rent/6001",
             is_active=True,
             views=234
@@ -142,7 +142,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price="35000",
             rooms="2 спальни",
-            posted_at=datetime.utcnow() - timedelta(days=1, hours=8),
+            posted_at=datetime.now(timezone.utc) - timedelta(days=1, hours=8),
             tg_link="https://t.me/bangkok_rent/7001",
             is_active=True,
             views=156
@@ -156,7 +156,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price=None,
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(days=2, hours=2),
+            posted_at=datetime.now(timezone.utc) - timedelta(days=2, hours=2),
             tg_link="https://t.me/pattaya_forsale/8001",
             is_active=True,
             views=89
@@ -170,7 +170,7 @@ async def seed_demo_data(db: AsyncSession):
             photos=[],
             price=None,
             rooms=None,
-            posted_at=datetime.utcnow() - timedelta(days=2, hours=15),
+            posted_at=datetime.now(timezone.utc) - timedelta(days=2, hours=15),
             tg_link="https://t.me/pattaya_health/9001",
             is_active=True,
             views=421

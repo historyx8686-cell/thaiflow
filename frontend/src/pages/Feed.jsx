@@ -79,7 +79,7 @@ export default function Feed({ city, tgUser }) {
     if (posts.length === 0 && !loading) {
       loadPosts(true)
     }
-  }, [posts.length, loading])
+  }, [posts.length, loading, loadPosts])
 
   // Load banners
   useEffect(() => {
