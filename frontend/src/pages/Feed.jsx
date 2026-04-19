@@ -145,27 +145,35 @@ export default function Feed({ city, tgUser }) {
   // Apply filters to posts
   const filteredPosts = posts.filter(post => {
     if (category === 'rent' && appliedFilters) {
-      const { priceFrom: af_pf, priceTo: af_pt, currency: af_cur, areaFrom: af_af, areaTo: af_at, selectedRooms: af_rooms } = appliedFilters
-      const rate = af_cur === 'USD' ? USD_TO_THB : 1
+      const {
+        priceFrom: appliedPriceFrom,
+        priceTo: appliedPriceTo,
+        currency: appliedCurrency,
+        areaFrom: appliedAreaFrom,
+        areaTo: appliedAreaTo,
+        selectedRooms: appliedRooms,
+      } = appliedFilters
+      const rate = appliedCurrency === 'USD' ? USD_TO_THB : 1
 
-      if (af_pf || af_pt) {
+      if (appliedPriceFrom || appliedPriceTo) {
         const price = parseFloat(post.price || '0')
-        const minThb = af_pf ? parseFloat(af_pf) * rate : 0
-        const maxThb = af_pt ? parseFloat(af_pt) * rate : Infinity
+        const minThb = appliedPriceFrom ? parseFloat(appliedPriceFrom) * rate : 0
+        const maxThb = appliedPriceTo ? parseFloat(appliedPriceTo) * rate : Infinity
         if (price < minThb || price > maxThb) return false
       }
 
-      if (af_af || af_at) {
+      if (appliedAreaFrom || appliedAreaTo) {
         const area = parseFloat(post.area || '0')
-        if (af_af && area < parseFloat(af_af)) return false
-        if (af_at && area > parseFloat(af_at)) return false
+        if (appliedAreaFrom && area < parseFloat(appliedAreaFrom)) return false
+        if (appliedAreaTo && area > parseFloat(appliedAreaTo)) return false
       }
 
-      if (af_rooms.length > 0 && post.rooms) {
+      if (appliedRooms.length > 0 && post.rooms) {
         const roomsStr = post.rooms.toLowerCase()
-        const matches = af_rooms.some(room => {
+        const numericRooms = parseInt(roomsStr, 10)
+        const matches = appliedRooms.some(room => {
           if (room === 'Студия') return roomsStr.includes('студи')
-          if (room === '4+') return parseInt(roomsStr) >= 4
+          if (room === '4+') return !isNaN(numericRooms) && numericRooms >= 4
           return roomsStr.includes(room)
         })
         if (!matches) return false
