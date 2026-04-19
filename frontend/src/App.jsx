@@ -37,7 +37,7 @@ function AppInner() {
 
   return (
     <div className="app" data-theme={theme}>
-      <Header city={city} setCity={setCity} theme={theme} setTheme={setTheme} />
+      <Header city={city} setCity={setCity} theme={theme} setTheme={setTheme} tgUser={tgUser} />
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Feed city={city} tgUser={tgUser} />} />

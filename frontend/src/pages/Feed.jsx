@@ -6,8 +6,8 @@ import AdBanner from '../components/AdBanner.jsx'
 import DateDivider from '../components/DateDivider.jsx'
 import { api } from '../api.js'
 
-const RENT_PRICE_FILTERS = ['До 10,000 ฿', '10-20,000 ฿', '20-40,000 ฿', '40,000+ ฿']
-const RENT_ROOMS_FILTERS = ['Студия', '1 спальня', '2 спальни', '3+ спальни']
+const ROOM_OPTIONS = ['Студия', '1', '2', '3', '4+']
+const USD_TO_THB = 35
 
 export default function Feed({ city, tgUser }) {
   const [posts, setPosts] = useState([])
@@ -19,10 +19,20 @@ export default function Feed({ city, tgUser }) {
   const [banners, setBanners] = useState([])
   const [savedPosts, setSavedPosts] = useState(new Set())
   const [rentFiltersOpen, setRentFiltersOpen] = useState(false)
-  const [rentPrice, setRentPrice] = useState(null)
-  const [rentRooms, setRentRooms] = useState(null)
   const [deepPostId, setDeepPostId] = useState(null)
   const [showDeepNotify, setShowDeepNotify] = useState(false)
+
+  // Rent filter input state
+  const [priceFrom, setPriceFrom] = useState('')
+  const [priceTo, setPriceTo] = useState('')
+  const [currency, setCurrency] = useState('THB')
+  const [areaFrom, setAreaFrom] = useState('')
+  const [areaTo, setAreaTo] = useState('')
+  const [maxTerm, setMaxTerm] = useState('')
+  const [selectedRooms, setSelectedRooms] = useState([])
+
+  // Applied filters (set on "Искать" click)
+  const [appliedFilters, setAppliedFilters] = useState(null)
 
   const location = useLocation()
   const observerRef = useRef()
@@ -122,30 +132,43 @@ export default function Feed({ city, tgUser }) {
     } catch (e) {}
   }
 
-  // Group posts by date, applying client-side rent filters
-  const PRICE_RANGES = {
-    'До 10,000 ฿': [0, 10000],
-    '10-20,000 ฿': [10000, 20000],
-    '20-40,000 ฿': [20000, 40000],
-    '40,000+ ฿': [40000, Infinity],
-  }
-  const ROOMS_MAP = {
-    'Студия': 'студия',
-    '1 спальня': '1',
-    '2 спальни': '2',
-    '3+ спальни': '3',
+  const toggleRoom = (room) => {
+    setSelectedRooms(prev =>
+      prev.includes(room) ? prev.filter(r => r !== room) : [...prev, room]
+    )
   }
 
+  const applyFilters = () => {
+    setAppliedFilters({ priceFrom, priceTo, currency, areaFrom, areaTo, maxTerm, selectedRooms })
+  }
+
+  // Apply filters to posts
   const filteredPosts = posts.filter(post => {
-    if (category === 'rent') {
-      if (rentPrice) {
-        const [min, max] = PRICE_RANGES[rentPrice] || [0, Infinity]
+    if (category === 'rent' && appliedFilters) {
+      const { priceFrom: af_pf, priceTo: af_pt, currency: af_cur, areaFrom: af_af, areaTo: af_at, selectedRooms: af_rooms } = appliedFilters
+      const rate = af_cur === 'USD' ? USD_TO_THB : 1
+
+      if (af_pf || af_pt) {
         const price = parseFloat(post.price || '0')
-        if (!(price >= min && price < max)) return false
+        const minThb = af_pf ? parseFloat(af_pf) * rate : 0
+        const maxThb = af_pt ? parseFloat(af_pt) * rate : Infinity
+        if (price < minThb || price > maxThb) return false
       }
-      if (rentRooms && post.rooms) {
-        const roomsKey = ROOMS_MAP[rentRooms] || ''
-        if (roomsKey && !post.rooms.toLowerCase().includes(roomsKey)) return false
+
+      if (af_af || af_at) {
+        const area = parseFloat(post.area || '0')
+        if (af_af && area < parseFloat(af_af)) return false
+        if (af_at && area > parseFloat(af_at)) return false
+      }
+
+      if (af_rooms.length > 0 && post.rooms) {
+        const roomsStr = post.rooms.toLowerCase()
+        const matches = af_rooms.some(room => {
+          if (room === 'Студия') return roomsStr.includes('студи')
+          if (room === '4+') return parseInt(roomsStr) >= 4
+          return roomsStr.includes(room)
+        })
+        if (!matches) return false
       }
     }
     return true
@@ -196,28 +219,93 @@ export default function Feed({ city, tgUser }) {
             <span>Фильтры {rentFiltersOpen ? '▲' : '▼'}</span>
           </div>
           {rentFiltersOpen && (
-            <>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Цена в месяц</div>
-              <div className="filter-row" style={{ marginBottom: 8 }}>
-                {RENT_PRICE_FILTERS.map(p => (
-                  <div
-                    key={p}
-                    className={`filter-chip ${rentPrice === p ? 'active' : ''}`}
-                    onClick={() => setRentPrice(rentPrice === p ? null : p)}
-                  >{p}</div>
-                ))}
+            <div className="rent-filter-form">
+              <div className="rent-filter-row">
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Цена / мес.</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="от"
+                      value={priceFrom}
+                      onChange={e => setPriceFrom(e.target.value)}
+                    />
+                    <span className="rent-filter-dash">—</span>
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="до"
+                      value={priceTo}
+                      onChange={e => setPriceTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Валюта</div>
+                  <div className="rent-currency-toggle">
+                    <button
+                      className={`rent-currency-btn ${currency === 'THB' ? 'active' : ''}`}
+                      onClick={() => setCurrency('THB')}
+                    >THB</button>
+                    <button
+                      className={`rent-currency-btn ${currency === 'USD' ? 'active' : ''}`}
+                      onClick={() => setCurrency('USD')}
+                    >USD</button>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Комнаты</div>
-              <div className="filter-row">
-                {RENT_ROOMS_FILTERS.map(r => (
-                  <div
-                    key={r}
-                    className={`filter-chip ${rentRooms === r ? 'active' : ''}`}
-                    onClick={() => setRentRooms(rentRooms === r ? null : r)}
-                  >{r}</div>
-                ))}
+
+              <div className="rent-filter-row">
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Площадь, м²</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="от"
+                      value={areaFrom}
+                      onChange={e => setAreaFrom(e.target.value)}
+                    />
+                    <span className="rent-filter-dash">—</span>
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="до"
+                      value={areaTo}
+                      onChange={e => setAreaTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Срок аренды</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="max"
+                      value={maxTerm}
+                      onChange={e => setMaxTerm(e.target.value)}
+                    />
+                    <span className="rent-filter-unit">мес.</span>
+                  </div>
+                </div>
               </div>
-            </>
+
+              <div className="rent-filter-rooms-row">
+                <div className="rent-filter-label">Комнаты:</div>
+                <div className="rent-rooms-group">
+                  {ROOM_OPTIONS.map(r => (
+                    <button
+                      key={r}
+                      className={`rent-room-btn ${selectedRooms.includes(r) ? 'active' : ''}`}
+                      onClick={() => toggleRoom(r)}
+                    >{r}</button>
+                  ))}
+                </div>
+                <button className="rent-search-btn" onClick={applyFilters}>Искать</button>
+              </div>
+            </div>
           )}
         </div>
       )}
