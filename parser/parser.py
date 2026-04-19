@@ -92,12 +92,12 @@ async def save_post(session, city: str, group: str, message_id: int, text: str, 
 async def parse_group(client, session, city: str, group: str):
     try:
         entity = await client.get_entity(group)
-        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(days=30)
 
         async for message in client.iter_messages(entity, limit=100):
             if not message.text:
                 continue
-            if message.date.replace(tzinfo=None) < cutoff:
+            if message.date < cutoff:
                 break
 
             photos = []
@@ -105,7 +105,7 @@ async def parse_group(client, session, city: str, group: str):
                 photos = [f"photo_{message.id}"]
 
             tg_link = f"https://t.me/{group}/{message.id}"
-            await save_post(session, city, group, message.id, message.text, photos, message.date.replace(tzinfo=None), tg_link)
+            await save_post(session, city, group, message.id, message.text, photos, message.date, tg_link)
 
     except Exception as e:
         logger.error(f"Error parsing {group}: {e}")
@@ -150,7 +150,7 @@ async def setup_realtime(client, session):
                     if event.message.media and hasattr(event.message.media, 'photo'):
                         photos = [f"photo_{event.message.id}"]
                     tg_link = f"https://t.me/{_group}/{event.message.id}"
-                    await save_post(session, _city, _group, event.message.id, event.message.text, photos, datetime.now(timezone.utc), tg_link)
+                    await save_post(session, _city, _group, event.message.id, event.message.text, photos, datetime.now(tz=timezone.utc), tg_link)
 
 
 async def main():

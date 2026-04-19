@@ -122,10 +122,38 @@ export default function Feed({ city, tgUser }) {
     } catch (e) {}
   }
 
-  // Group posts by date
+  // Group posts by date, applying client-side rent filters
+  const PRICE_RANGES = {
+    'До 10,000 ฿': [0, 10000],
+    '10-20,000 ฿': [10000, 20000],
+    '20-40,000 ฿': [20000, 40000],
+    '40,000+ ฿': [40000, Infinity],
+  }
+  const ROOMS_MAP = {
+    'Студия': 'студия',
+    '1 спальня': '1',
+    '2 спальни': '2',
+    '3+ спальни': '3',
+  }
+
+  const filteredPosts = posts.filter(post => {
+    if (category === 'rent') {
+      if (rentPrice) {
+        const [min, max] = PRICE_RANGES[rentPrice] || [0, Infinity]
+        const price = parseFloat(post.price || '0')
+        if (!(price >= min && price < max)) return false
+      }
+      if (rentRooms && post.rooms) {
+        const roomsKey = ROOMS_MAP[rentRooms] || ''
+        if (!post.rooms.toLowerCase().includes(roomsKey)) return false
+      }
+    }
+    return true
+  })
+
   const groupedPosts = []
   let lastDate = null
-  for (const post of posts) {
+  for (const post of filteredPosts) {
     const postDate = post.posted_at ? new Date(post.posted_at).toDateString() : ''
     if (postDate !== lastDate) {
       groupedPosts.push({ type: 'divider', date: post.posted_at })
@@ -211,7 +239,7 @@ export default function Feed({ city, tgUser }) {
         )
       })}
 
-      {posts.length === 0 && !loading && (
+      {filteredPosts.length === 0 && !loading && (
         <div className="empty-state">
           <div className="empty-state-icon">🔍</div>
           <div className="empty-state-text">Объявления не найдены</div>

@@ -425,7 +425,7 @@ async def get_banners(
     if category and category != "all":
         query = query.where(or_(Banner.category == category, Banner.category == "all"))
     if city:
-        query = query.where(or_(Banner.city == city, Banner.city == None))
+        query = query.where(or_(Banner.city == city, Banner.city.is_(None)))
     result = await db.execute(query)
     banners = result.scalars().all()
     return [
