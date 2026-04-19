@@ -202,8 +202,16 @@ function ModalProfile({ onClose, tgUser }) {
   const [activeTab, setActiveTab] = useState('overview')
   const refLink = tgUser?.id ? `https://t.me/thaiflow?start=ref_${tgUser.id}` : 'https://t.me/thaiflow'
 
+  const [copyMsg, setCopyMsg] = useState('')
+
   const copyRef = () => {
-    navigator.clipboard.writeText(refLink).catch(() => {})
+    navigator.clipboard.writeText(refLink).then(() => {
+      setCopyMsg('Скопировано!')
+      setTimeout(() => setCopyMsg(''), 2000)
+    }).catch(() => {
+      setCopyMsg('Ошибка копирования')
+      setTimeout(() => setCopyMsg(''), 2000)
+    })
   }
 
   const shareRef = () => {
@@ -255,6 +263,7 @@ function ModalProfile({ onClose, tgUser }) {
                   <button className="ref-btn" onClick={copyRef}>📋 Скопировать ссылку</button>
                   <button className="ref-btn ref-btn-share" onClick={shareRef}>🚀 Поделиться</button>
                 </div>
+                {copyMsg && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent-green)' }}>{copyMsg}</div>}
               </div>
               <div className="modal-section">
                 <div className="modal-section-title">🏆 Таблица лидеров</div>

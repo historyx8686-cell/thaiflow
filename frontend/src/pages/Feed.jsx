@@ -7,6 +7,7 @@ import DateDivider from '../components/DateDivider.jsx'
 import { api } from '../api.js'
 
 const ROOMS_OPTIONS = ['Студия', '1', '2', '3', '4+']
+const USD_TO_THB_RATE = 34
 
 export default function Feed({ city, tgUser }) {
   const [posts, setPosts] = useState([])
@@ -130,9 +131,9 @@ export default function Feed({ city, tgUser }) {
     } catch (e) {}
   }
 
-  const toggleRoom = (room) => {
+  const toggleRoom = (roomOption) => {
     setSelectedRooms(prev =>
-      prev.includes(room) ? prev.filter(r => r !== room) : [...prev, room]
+      prev.includes(roomOption) ? prev.filter(r => r !== roomOption) : [...prev, roomOption]
     )
   }
 
@@ -147,7 +148,7 @@ export default function Feed({ city, tgUser }) {
 
       if (priceFrom || priceTo) {
         let price = parseFloat(post.price || '0')
-        if (currency === 'USD' && price > 0) price = price / 34
+        if (currency === 'USD' && price > 0) price = price / USD_TO_THB_RATE
         if (priceFrom && price < parseFloat(priceFrom)) return false
         if (priceTo && price > parseFloat(priceTo)) return false
       }
