@@ -150,7 +150,7 @@ async def setup_realtime(client, session):
                     if event.message.media and hasattr(event.message.media, 'photo'):
                         photos = [f"photo_{event.message.id}"]
                     tg_link = f"https://t.me/{_group}/{event.message.id}"
-                    await save_post(session, _city, _group, event.message.id, event.message.text, photos, datetime.now(tz=timezone.utc), tg_link)
+                    await save_post(session, _city, _group, event.message.id, event.message.text, photos, event.message.date, tg_link)
 
 
 async def main():

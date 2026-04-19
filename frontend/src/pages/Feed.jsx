@@ -145,7 +145,7 @@ export default function Feed({ city, tgUser }) {
       }
       if (rentRooms && post.rooms) {
         const roomsKey = ROOMS_MAP[rentRooms] || ''
-        if (!post.rooms.toLowerCase().includes(roomsKey)) return false
+        if (roomsKey && !post.rooms.toLowerCase().includes(roomsKey)) return false
       }
     }
     return true
