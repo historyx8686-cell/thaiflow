@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - db_data:/app
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////app/thaiflow.db
+    restart: unless-stopped
+
+  bot:
+    build: ./bot
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - WEBAPP_URL=${WEBAPP_URL}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  parser:
+    build: ./parser
+    environment:
+      - TG_API_ID=${TG_API_ID}
+      - TG_API_HASH=${TG_API_HASH}
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - db_data:/app
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
