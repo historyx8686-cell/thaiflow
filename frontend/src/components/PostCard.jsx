@@ -17,43 +17,38 @@ const CATEGORY_NAMES = {
   lost_found: '🔍 Потеряно',
 }
 
-// 1. Очистка текста от Markdown (** и ссылок)
+// 1. Очистка текста
 const formatText = (text) => {
   if (!text) return ""
-  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1') // Убираем жирный текст
-  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Убираем ссылки, оставляем только текст
-  clean = clean.replace(/\\n/g, '\n') // Исправляем переносы строк
-  return clean
+  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+  return clean.replace(/\\n/g, '\n')
 }
 
-// 2. Компонент галереи (теперь ищет фото везде и не показывает рандом)
+// 2. Галерея (улучшенный поиск данных)
 function PhotoGrid({ post }) {
-  // Проверяем все возможные поля, где могут лежать картинки
-  const data = post.photos || post.images || []
+  // Проверяем все возможные варианты названий полей из базы
+  const rawData = post.photos || post.images || post.photo_urls || post.image_urls || [];
   
-  if (!Array.isArray(data) || data.length === 0) return null
+  // Превращаем в массив, если пришла одиночная строка
+  const data = Array.isArray(rawData) ? rawData : [rawData];
+  
+  // Убираем пустые значения
+  const validPhotos = data.filter(p => p && (typeof p === 'string' || p.url));
 
-  // Оставляем только те элементы, которые похожи на ссылки
-  const validPhotos = data.filter(p => {
-    const url = typeof p === 'string' ? p : p?.url
-    return url && url.startsWith('http')
-  })
+  if (validPhotos.length === 0) return null;
 
-  if (validPhotos.length === 0) return null
-
-  const count = validPhotos.length
-  let gridClass = 'single'
-  if (count === 2) gridClass = 'double'
-  else if (count >= 3 && count <= 4) gridClass = 'quad'
-  else if (count >= 5 && count <= 6) gridClass = 'six'
-  else if (count >= 7) gridClass = 'nine'
-
-  const displayPhotos = count > 9 ? validPhotos.slice(0, 9) : validPhotos
+  const count = validPhotos.length;
+  let gridClass = 'single';
+  if (count === 2) gridClass = 'double';
+  else if (count >= 3 && count <= 4) gridClass = 'quad';
+  else if (count >= 5 && count <= 6) gridClass = 'six';
+  else if (count >= 7) gridClass = 'nine';
 
   return (
     <div className={`photos-grid ${gridClass}`}>
-      {displayPhotos.map((photo, i) => {
-        const src = typeof photo === 'string' ? photo : photo.url
+      {validPhotos.slice(0, 9).map((photo, i) => {
+        const src = typeof photo === 'string' ? photo : photo.url;
         return (
           <div key={i} className="photo-wrapper">
             <img
@@ -69,7 +64,6 @@ function PhotoGrid({ post }) {
   )
 }
 
-// 3. Основной компонент карточки
 export default function PostCard({ post, highlighted, onSave, saved }) {
   const [expanded, setExpanded] = useState(false)
   const isLong = post.text && post.text.length > 200
@@ -89,17 +83,6 @@ export default function PostCard({ post, highlighted, onSave, saved }) {
     }
   }
 
-  const share = () => {
-    const shareUrl = `${window.location.origin}?post=${post.id}`
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.switchInlineQuery(`post_${post.id}`)
-    } else if (navigator.share) {
-      navigator.share({ url: shareUrl, title: 'ThaiFlow' })
-    } else {
-      navigator.clipboard?.writeText(shareUrl)
-    }
-  }
-
   return (
     <div className={`post-card ${highlighted ? 'highlighted' : ''}`}>
       <div className="post-header">
@@ -111,6 +94,7 @@ export default function PostCard({ post, highlighted, onSave, saved }) {
         <div className="post-category-tag">{CATEGORY_NAMES[post.category] || post.category}</div>
       </div>
 
+      {/* Вызываем галерею */}
       <PhotoGrid post={post} />
 
       <div className="post-text-wrap">
@@ -128,10 +112,13 @@ export default function PostCard({ post, highlighted, onSave, saved }) {
         <button className="tg-btn" onClick={openInTelegram}>
           ✈️ Открыть в Telegram ↗
         </button>
-        <button className="action-btn" onClick={share} title="Поделиться">
-          🔗
-        </button>
-        <button
+        <button 
           className={`action-btn ${saved ? 'saved' : ''}`}
           onClick={() => onSave && onSave(post.id)}
-          title={saved ? '
+        >
+          🔖
+        </button>
+      </div>
+    </div>
+  )
+}
