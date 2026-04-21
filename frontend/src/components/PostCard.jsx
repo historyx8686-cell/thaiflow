@@ -18,16 +18,37 @@ const CATEGORY_NAMES = {
 }
 
 function PhotoGrid({ photos }) {
-  if (!photos || photos.length === 0) return null
+  // Если фото нет или это пустой массив — ничего не рисуем
+  if (!photos || !Array.isArray(photos) || photos.length === 0) return null
 
-  const count = photos.length
+  // Фильтруем только нормальные ссылки
+  const validPhotos = photos.filter(p => typeof p === 'string' && p.startsWith('http'))
+  if (validPhotos.length === 0) return null
+
+  const count = validPhotos.length
   let gridClass = 'single'
   if (count === 2) gridClass = 'double'
   else if (count === 3 || count === 4) gridClass = 'quad'
   else if (count >= 5 && count <= 6) gridClass = 'six'
   else if (count >= 7) gridClass = 'nine'
 
-  const displayPhotos = count > 9 ? photos.slice(0, 9) : photos
+  const displayPhotos = count > 9 ? validPhotos.slice(0, 9) : validPhotos
+
+  return (
+    <div className={`photos-grid ${gridClass}`}>
+      {displayPhotos.map((photo, i) => (
+        <div key={i} className="photo-wrapper">
+          <img
+            src={photo}
+            alt=""
+            loading="lazy"
+            onError={e => { e.target.closest('.photo-wrapper').style.display = 'none' }}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
 
   return (
     <div className={`photos-grid ${gridClass}`}>
