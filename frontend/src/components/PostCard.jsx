@@ -123,16 +123,9 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
 
       <PhotoGrid photos={post.photos} />
 
-      <div className="post-text-wrap">
-        <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
-          {post.text}
-        </div>
-        {isLong && (
-          <button className="show-more-btn" onClick={() => setExpanded(!expanded)}>
-            {expanded ? 'Свернуть' : 'Показать полностью'}
-          </button>
-        )}
-      </div>
+      <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
+  {expanded ? formatText(post.text) : formatText(post.text).slice(0, 200) + (isLong ? '...' : '')}
+</div>
 
       <div className="post-actions">
         <button className="tg-btn" onClick={openInTelegram}>
