@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = 'https://medicine-depending-pace-suggesting.trycloudflare.com/api';
 
 export const api = {
   async getPosts({ city, category, search, page = 1, limit = 20 } = {}) {

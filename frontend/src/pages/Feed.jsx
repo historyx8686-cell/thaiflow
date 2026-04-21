@@ -6,8 +6,8 @@ import AdBanner from '../components/AdBanner.jsx'
 import DateDivider from '../components/DateDivider.jsx'
 import { api } from '../api.js'
 
-const ROOMS_OPTIONS = ['Студия', '1', '2', '3', '4+']
-const USD_TO_THB_RATE = 34
+const ROOM_OPTIONS = ['Студия', '1', '2', '3', '4+']
+const USD_TO_THB = 35
 
 export default function Feed({ city, tgUser }) {
   const [posts, setPosts] = useState([])
@@ -18,10 +18,11 @@ export default function Feed({ city, tgUser }) {
   const [loading, setLoading] = useState(false)
   const [banners, setBanners] = useState([])
   const [savedPosts, setSavedPosts] = useState(new Set())
+  const [rentFiltersOpen, setRentFiltersOpen] = useState(false)
   const [deepPostId, setDeepPostId] = useState(null)
   const [showDeepNotify, setShowDeepNotify] = useState(false)
 
-  // Rent filter input states (pending — not yet applied)
+  // Состояния для фильтров аренды
   const [priceFrom, setPriceFrom] = useState('')
   const [priceTo, setPriceTo] = useState('')
   const [currency, setCurrency] = useState('THB')
@@ -30,14 +31,14 @@ export default function Feed({ city, tgUser }) {
   const [maxTerm, setMaxTerm] = useState('')
   const [selectedRooms, setSelectedRooms] = useState([])
 
-  // Applied filter state (used for actual filtering — set on "Искать" click)
+  // Примененные фильтры (срабатывают при клике на "Искать")
   const [appliedFilters, setAppliedFilters] = useState(null)
 
   const location = useLocation()
   const observerRef = useRef()
   const bottomRef = useRef()
 
-  // Deeplink handling
+  // Обработка диплинков (прямых ссылок на пост)
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const postId = params.get('post')
@@ -47,7 +48,7 @@ export default function Feed({ city, tgUser }) {
     }
   }, [location.search])
 
-  // Load favorites
+  // Загрузка закладок
   useEffect(() => {
     if (tgUser?.id) {
       api.getFavorites(String(tgUser.id))
@@ -77,7 +78,7 @@ export default function Feed({ city, tgUser }) {
     }
   }, [city, category, search, page, loading])
 
-  // Reset on filter change
+  // Сброс при смене города, категории или поиске
   useEffect(() => {
     setPosts([])
     setPage(1)
@@ -90,14 +91,14 @@ export default function Feed({ city, tgUser }) {
     }
   }, [posts.length, loading, loadPosts])
 
-  // Load banners
+  // Загрузка баннеров
   useEffect(() => {
     api.getBanners({ category, city })
       .then(setBanners)
       .catch(() => {})
   }, [category, city])
 
-  // Infinite scroll
+  // Бесконечный скролл
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect()
     observerRef.current = new IntersectionObserver(entries => {
@@ -113,7 +114,7 @@ export default function Feed({ city, tgUser }) {
     return () => observerRef.current?.disconnect()
   }, [hasMore, loading, loadPosts])
 
-  // Scroll to deeplinked post
+  // Скролл к посту по диплинку
   useEffect(() => {
     if (deepPostId && posts.length > 0) {
       setTimeout(() => {
@@ -131,9 +132,9 @@ export default function Feed({ city, tgUser }) {
     } catch (e) {}
   }
 
-  const toggleRoom = (roomOption) => {
+  const toggleRoom = (room) => {
     setSelectedRooms(prev =>
-      prev.includes(roomOption) ? prev.filter(r => r !== roomOption) : [...prev, roomOption]
+      prev.includes(room) ? prev.filter(r => r !== room) : [...prev, room]
     )
   }
 
@@ -141,30 +142,35 @@ export default function Feed({ city, tgUser }) {
     setAppliedFilters({ priceFrom, priceTo, currency, areaFrom, areaTo, maxTerm, selectedRooms })
   }
 
-  // Client-side filtering based on applied filters
+  // Фильтрация на стороне клиента
   const filteredPosts = posts.filter(post => {
     if (category === 'rent' && appliedFilters) {
-      const { priceFrom, priceTo, currency, areaFrom, areaTo, selectedRooms } = appliedFilters
+      const { priceFrom, priceTo, currency, areaFrom, areaTo, maxTerm, selectedRooms } = appliedFilters
+      const rate = currency === 'USD' ? USD_TO_THB : 1
 
+      // Фильтр цены
       if (priceFrom || priceTo) {
-        let price = parseFloat(post.price || '0')
-        if (currency === 'USD' && price > 0) price = price / USD_TO_THB_RATE
-        if (priceFrom && price < parseFloat(priceFrom)) return false
-        if (priceTo && price > parseFloat(priceTo)) return false
+        const price = parseFloat(post.price || '0')
+        const minThb = priceFrom ? parseFloat(priceFrom) * rate : 0
+        const maxThb = priceTo ? parseFloat(priceTo) * rate : Infinity
+        if (price < minThb || price > maxThb) return false
       }
 
+      // Фильтр площади
       if (areaFrom || areaTo) {
         const area = parseFloat(post.area || '0')
         if (areaFrom && area < parseFloat(areaFrom)) return false
         if (areaTo && area > parseFloat(areaTo)) return false
       }
 
-      if (selectedRooms.length > 0) {
-        const roomValue = post.rooms?.toLowerCase() || ''
-        const matches = selectedRooms.some(r => {
-          if (r === 'Студия') return roomValue.includes('студия') || roomValue.includes('studio')
-          if (r === '4+') return parseInt(roomValue) >= 4
-          return roomValue.includes(r)
+      // Фильтр комнат
+      if (selectedRooms.length > 0 && post.rooms) {
+        const roomsStr = post.rooms.toLowerCase()
+        const numericRooms = parseInt(roomsStr, 10)
+        const matches = selectedRooms.some(room => {
+          if (room === 'Студия') return roomsStr.includes('студи')
+          if (room === '4+') return !isNaN(numericRooms) && numericRooms >= 4
+          return roomsStr.includes(room)
         })
         if (!matches) return false
       }
@@ -172,6 +178,7 @@ export default function Feed({ city, tgUser }) {
     return true
   })
 
+  // Группировка по датам для разделителей
   const groupedPosts = []
   let lastDate = null
   for (const post of filteredPosts) {
@@ -210,95 +217,102 @@ export default function Feed({ city, tgUser }) {
 
       {category === 'rent' && (
         <div className="rent-filters">
-          <div className="rf-row">
-            <div className="rf-group" style={{ flex: 1 }}>
-              <div className="rf-label">Цена / мес.</div>
-              <div className="rf-range">
-                <input
-                  className="rf-input"
-                  type="number"
-                  placeholder="от"
-                  value={priceFrom}
-                  onChange={e => setPriceFrom(e.target.value)}
-                />
-                <span className="rf-dash">—</span>
-                <input
-                  className="rf-input"
-                  type="number"
-                  placeholder="до"
-                  value={priceTo}
-                  onChange={e => setPriceTo(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="rf-group">
-              <div className="rf-label">Валюта</div>
-              <div className="rf-currency">
-                <button
-                  className={`rf-currency-btn ${currency === 'THB' ? 'active' : ''}`}
-                  onClick={() => setCurrency('THB')}
-                >THB</button>
-                <button
-                  className={`rf-currency-btn ${currency === 'USD' ? 'active' : ''}`}
-                  onClick={() => setCurrency('USD')}
-                >USD</button>
-              </div>
-            </div>
+          <div 
+            className={`rent-filters-toggle ${rentFiltersOpen ? 'open' : ''}`} 
+            onClick={() => setRentFiltersOpen(!rentFiltersOpen)}
+          >
+            <span>{rentFiltersOpen ? '🔼 Скрыть фильтры' : '🔽 Показать фильтры'}</span>
           </div>
 
-          <div className="rf-row" style={{ marginTop: 10 }}>
-            <div className="rf-group" style={{ flex: 1 }}>
-              <div className="rf-label">Площадь, м²</div>
-              <div className="rf-range">
-                <input
-                  className="rf-input"
-                  type="number"
-                  placeholder="от"
-                  value={areaFrom}
-                  onChange={e => setAreaFrom(e.target.value)}
-                />
-                <span className="rf-dash">—</span>
-                <input
-                  className="rf-input"
-                  type="number"
-                  placeholder="до"
-                  value={areaTo}
-                  onChange={e => setAreaTo(e.target.value)}
-                />
+          {rentFiltersOpen && (
+            <div className="rent-filter-form">
+              <div className="rent-filter-row">
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Цена / мес.</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="от"
+                      value={priceFrom}
+                      onChange={e => setPriceFrom(e.target.value)}
+                    />
+                    <span className="rent-filter-dash">—</span>
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="до"
+                      value={priceTo}
+                      onChange={e => setPriceTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Валюта</div>
+                  <div className="rent-currency-toggle">
+                    <button
+                      className={`rent-currency-btn ${currency === 'THB' ? 'active' : ''}`}
+                      onClick={() => setCurrency('THB')}
+                    >THB</button>
+                    <button
+                      className={`rent-currency-btn ${currency === 'USD' ? 'active' : ''}`}
+                      onClick={() => setCurrency('USD')}
+                    >USD</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rent-filter-row">
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Площадь, м²</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="от"
+                      value={areaFrom}
+                      onChange={e => setAreaFrom(e.target.value)}
+                    />
+                    <span className="rent-filter-dash">—</span>
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="до"
+                      value={areaTo}
+                      onChange={e => setAreaTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="rent-filter-group">
+                  <div className="rent-filter-label">Срок аренды</div>
+                  <div className="rent-filter-range">
+                    <input
+                      className="rent-filter-input"
+                      type="number"
+                      placeholder="max"
+                      value={maxTerm}
+                      onChange={e => setMaxTerm(e.target.value)}
+                    />
+                    <span className="rent-filter-unit">мес.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rent-filter-rooms-row">
+                <div className="rent-filter-label">Комнаты:</div>
+                <div className="rent-rooms-group">
+                  {ROOM_OPTIONS.map(r => (
+                    <button
+                      key={r}
+                      className={`rent-room-btn ${selectedRooms.includes(r) ? 'active' : ''}`}
+                      onClick={() => toggleRoom(r)}
+                    >{r}</button>
+                  ))}
+                </div>
+                <button className="rent-search-btn" onClick={applyFilters}>Искать</button>
               </div>
             </div>
-            <div className="rf-group">
-              <div className="rf-label">Срок аренды</div>
-              <div className="rf-range">
-                <input
-                  className="rf-input"
-                  type="number"
-                  placeholder="max"
-                  value={maxTerm}
-                  onChange={e => setMaxTerm(e.target.value)}
-                  style={{ width: 70 }}
-                />
-                <span className="rf-unit">мес.</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 10 }}>
-            <div className="rf-label">Комнаты</div>
-            <div className="rf-rooms">
-              {ROOMS_OPTIONS.map(r => (
-                <button
-                  key={r}
-                  className={`rf-room-btn ${selectedRooms.includes(r) ? 'active' : ''}`}
-                  onClick={() => toggleRoom(r)}
-                >{r}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="rf-search-row">
-            <button className="rf-search-btn" onClick={applyFilters}>Искать</button>
-          </div>
+          )}
         </div>
       )}
 

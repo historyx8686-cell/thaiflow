@@ -17,35 +17,54 @@ const CATEGORY_NAMES = {
   lost_found: '🔍 Потеряно',
 }
 
-function PhotoGrid({ photos }) {
-  if (!photos || photos.length === 0) return null
+// 1. Очистка текста
+const formatText = (text) => {
+  if (!text) return ""
+  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+  return clean.replace(/\\n/g, '\n')
+}
 
-  const count = photos.length
-  let gridClass = 'single'
-  if (count === 2) gridClass = 'double'
-  else if (count === 3 || count === 4) gridClass = 'quad'
-  else if (count >= 5 && count <= 6) gridClass = 'six'
-  else if (count >= 7) gridClass = 'nine'
+// 2. Галерея (улучшенный поиск данных)
+function PhotoGrid({ post }) {
+  // Проверяем все возможные варианты названий полей из базы
+  const rawData = post.photos || post.images || post.photo_urls || post.image_urls || [];
+  
+  // Превращаем в массив, если пришла одиночная строка
+  const data = Array.isArray(rawData) ? rawData : [rawData];
+  
+  // Убираем пустые значения
+  const validPhotos = data.filter(p => p && (typeof p === 'string' || p.url));
 
-  const displayPhotos = count > 9 ? photos.slice(0, 9) : photos
+  if (validPhotos.length === 0) return null;
+
+  const count = validPhotos.length;
+  let gridClass = 'single';
+  if (count === 2) gridClass = 'double';
+  else if (count >= 3 && count <= 4) gridClass = 'quad';
+  else if (count >= 5 && count <= 6) gridClass = 'six';
+  else if (count >= 7) gridClass = 'nine';
 
   return (
     <div className={`photos-grid ${gridClass}`}>
-      {displayPhotos.map((photo, i) => (
-        <div key={i} className="photo-wrapper">
-          <img
-            src={typeof photo === 'string' && photo.startsWith('http') ? photo : `https://picsum.photos/seed/${photo}/400/300`}
-            alt=""
-            loading="lazy"
-            onError={e => { e.target.style.display = 'none' }}
-          />
-        </div>
-      ))}
+      {validPhotos.slice(0, 9).map((photo, i) => {
+        const src = typeof photo === 'string' ? photo : photo.url;
+        return (
+          <div key={i} className="photo-wrapper">
+            <img
+              src={src}
+              alt=""
+              loading="lazy"
+              onError={e => { e.target.closest('.photo-wrapper').style.display = 'none' }}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
+export default function PostCard({ post, highlighted, onSave, saved }) {
   const [expanded, setExpanded] = useState(false)
   const isLong = post.text && post.text.length > 200
 
@@ -64,17 +83,6 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
     }
   }
 
-  const share = () => {
-    const shareUrl = `${window.location.origin}?post=${post.id}`
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.switchInlineQuery(`post_${post.id}`)
-    } else if (navigator.share) {
-      navigator.share({ url: shareUrl, title: 'ThaiFlow' })
-    } else {
-      navigator.clipboard?.writeText(shareUrl)
-    }
-  }
-
   return (
     <div className={`post-card ${highlighted ? 'highlighted' : ''}`}>
       <div className="post-header">
@@ -86,11 +94,12 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
         <div className="post-category-tag">{CATEGORY_NAMES[post.category] || post.category}</div>
       </div>
 
-      <PhotoGrid photos={post.photos} />
+      {/* Вызываем галерею */}
+      <PhotoGrid post={post} />
 
       <div className="post-text-wrap">
         <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
-          {post.text}
+          {expanded ? formatText(post.text) : formatText(post.text).slice(0, 200) + (isLong ? '...' : '')}
         </div>
         {isLong && (
           <button className="show-more-btn" onClick={() => setExpanded(!expanded)}>
@@ -103,13 +112,9 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
         <button className="tg-btn" onClick={openInTelegram}>
           ✈️ Открыть в Telegram ↗
         </button>
-        <button className="action-btn" onClick={share} title="Поделиться">
-          🔗
-        </button>
-        <button
+        <button 
           className={`action-btn ${saved ? 'saved' : ''}`}
           onClick={() => onSave && onSave(post.id)}
-          title={saved ? 'Убрать из закладок' : 'В закладки'}
         >
           🔖
         </button>
