@@ -17,11 +17,18 @@ const CATEGORY_NAMES = {
   lost_found: '🔍 Потеряно',
 }
 
+// 1. Очистка текста от мусора (** и ссылок)
+const formatText = (text) => {
+  if (!text) return ""
+  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1') // Убираем жирный
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Убираем ссылки
+  return clean.replace(/\\n/g, '\n')
+}
+
+// 2. Галерея фото (без рандомных картинок)
 function PhotoGrid({ photos }) {
-  // Если фото нет или это пустой массив — ничего не рисуем
   if (!photos || !Array.isArray(photos) || photos.length === 0) return null
 
-  // Фильтруем только нормальные ссылки
   const validPhotos = photos.filter(p => typeof p === 'string' && p.startsWith('http'))
   if (validPhotos.length === 0) return null
 
@@ -50,36 +57,7 @@ function PhotoGrid({ photos }) {
   )
 }
 
-  return (
-    <div className={`photos-grid ${gridClass}`}>
-      {displayPhotos.map((photo, i) => (
-        <div key={i} className="photo-wrapper">
-          <img
-            src={typeof photo === 'string' && photo.startsWith('http') ? photo : `https://picsum.photos/seed/${photo}/400/300`}
-            alt=""
-            loading="lazy"
-            onError={e => { e.target.style.display = 'none' }}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-const formatText = (text) => {
-  if (!text) return ""
-  
-  // 1. Убираем жирный текст (звездочки)
-  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
-  
-  // 2. Убираем ссылки Markdown [текст](ссылка), оставляя только текст
-  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1')
-  
-  // 3. Убираем лишние системные символы, если остались
-  clean = clean.replace(/\\n/g, '\n')
-  
-  return clean
-}
-
+// 3. Основной компонент карточки
 export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
   const [expanded, setExpanded] = useState(false)
   const isLong = post.text && post.text.length > 200
@@ -123,9 +101,16 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
 
       <PhotoGrid photos={post.photos} />
 
-      <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
-  {expanded ? formatText(post.text) : formatText(post.text).slice(0, 200) + (isLong ? '...' : '')}
-</div>
+      <div className="post-text-wrap">
+        <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
+          {expanded ? formatText(post.text) : formatText(post.text).slice(0, 200) + (isLong ? '...' : '')}
+        </div>
+        {isLong && (
+          <button className="show-more-btn" onClick={() => setExpanded(!expanded)}>
+            {expanded ? 'Свернуть' : 'Показать полностью'}
+          </button>
+        )}
+      </div>
 
       <div className="post-actions">
         <button className="tg-btn" onClick={openInTelegram}>
