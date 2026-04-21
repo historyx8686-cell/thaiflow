@@ -22,7 +22,7 @@ export default function Feed({ city, tgUser }) {
   const [deepPostId, setDeepPostId] = useState(null)
   const [showDeepNotify, setShowDeepNotify] = useState(false)
 
-  // Rent filter input state
+  // Состояния для фильтров аренды
   const [priceFrom, setPriceFrom] = useState('')
   const [priceTo, setPriceTo] = useState('')
   const [currency, setCurrency] = useState('THB')
@@ -31,14 +31,14 @@ export default function Feed({ city, tgUser }) {
   const [maxTerm, setMaxTerm] = useState('')
   const [selectedRooms, setSelectedRooms] = useState([])
 
-  // Applied filters (set on "Искать" click)
+  // Примененные фильтры (срабатывают при клике на "Искать")
   const [appliedFilters, setAppliedFilters] = useState(null)
 
   const location = useLocation()
   const observerRef = useRef()
   const bottomRef = useRef()
 
-  // Deeplink handling
+  // Обработка диплинков (прямых ссылок на пост)
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const postId = params.get('post')
@@ -48,7 +48,7 @@ export default function Feed({ city, tgUser }) {
     }
   }, [location.search])
 
-  // Load favorites
+  // Загрузка закладок
   useEffect(() => {
     if (tgUser?.id) {
       api.getFavorites(String(tgUser.id))
@@ -78,7 +78,7 @@ export default function Feed({ city, tgUser }) {
     }
   }, [city, category, search, page, loading])
 
-  // Reset on filter change
+  // Сброс при смене города, категории или поиске
   useEffect(() => {
     setPosts([])
     setPage(1)
@@ -91,14 +91,14 @@ export default function Feed({ city, tgUser }) {
     }
   }, [posts.length, loading, loadPosts])
 
-  // Load banners
+  // Загрузка баннеров
   useEffect(() => {
     api.getBanners({ category, city })
       .then(setBanners)
       .catch(() => {})
   }, [category, city])
 
-  // Infinite scroll
+  // Бесконечный скролл
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect()
     observerRef.current = new IntersectionObserver(entries => {
@@ -114,7 +114,7 @@ export default function Feed({ city, tgUser }) {
     return () => observerRef.current?.disconnect()
   }, [hasMore, loading, loadPosts])
 
-  // Scroll to deeplinked post
+  // Скролл к посту по диплинку
   useEffect(() => {
     if (deepPostId && posts.length > 0) {
       setTimeout(() => {
@@ -142,36 +142,32 @@ export default function Feed({ city, tgUser }) {
     setAppliedFilters({ priceFrom, priceTo, currency, areaFrom, areaTo, maxTerm, selectedRooms })
   }
 
-  // Apply filters to posts
+  // Фильтрация на стороне клиента
   const filteredPosts = posts.filter(post => {
     if (category === 'rent' && appliedFilters) {
-      const {
-        priceFrom: appliedPriceFrom,
-        priceTo: appliedPriceTo,
-        currency: appliedCurrency,
-        areaFrom: appliedAreaFrom,
-        areaTo: appliedAreaTo,
-        selectedRooms: appliedRooms,
-      } = appliedFilters
-      const rate = appliedCurrency === 'USD' ? USD_TO_THB : 1
+      const { priceFrom, priceTo, currency, areaFrom, areaTo, maxTerm, selectedRooms } = appliedFilters
+      const rate = currency === 'USD' ? USD_TO_THB : 1
 
-      if (appliedPriceFrom || appliedPriceTo) {
+      // Фильтр цены
+      if (priceFrom || priceTo) {
         const price = parseFloat(post.price || '0')
-        const minThb = appliedPriceFrom ? parseFloat(appliedPriceFrom) * rate : 0
-        const maxThb = appliedPriceTo ? parseFloat(appliedPriceTo) * rate : Infinity
+        const minThb = priceFrom ? parseFloat(priceFrom) * rate : 0
+        const maxThb = priceTo ? parseFloat(priceTo) * rate : Infinity
         if (price < minThb || price > maxThb) return false
       }
 
-      if (appliedAreaFrom || appliedAreaTo) {
+      // Фильтр площади
+      if (areaFrom || areaTo) {
         const area = parseFloat(post.area || '0')
-        if (appliedAreaFrom && area < parseFloat(appliedAreaFrom)) return false
-        if (appliedAreaTo && area > parseFloat(appliedAreaTo)) return false
+        if (areaFrom && area < parseFloat(areaFrom)) return false
+        if (areaTo && area > parseFloat(areaTo)) return false
       }
 
-      if (appliedRooms.length > 0 && post.rooms) {
+      // Фильтр комнат
+      if (selectedRooms.length > 0 && post.rooms) {
         const roomsStr = post.rooms.toLowerCase()
         const numericRooms = parseInt(roomsStr, 10)
-        const matches = appliedRooms.some(room => {
+        const matches = selectedRooms.some(room => {
           if (room === 'Студия') return roomsStr.includes('студи')
           if (room === '4+') return !isNaN(numericRooms) && numericRooms >= 4
           return roomsStr.includes(room)
@@ -182,6 +178,7 @@ export default function Feed({ city, tgUser }) {
     return true
   })
 
+  // Группировка по датам для разделителей
   const groupedPosts = []
   let lastDate = null
   for (const post of filteredPosts) {
@@ -220,12 +217,13 @@ export default function Feed({ city, tgUser }) {
 
       {category === 'rent' && (
         <div className="rent-filters">
-          <div
-            className={`rent-filters-toggle ${rentFiltersOpen ? 'open' : ''}`}
+          <div 
+            className={`rent-filters-toggle ${rentFiltersOpen ? 'open' : ''}`} 
             onClick={() => setRentFiltersOpen(!rentFiltersOpen)}
           >
-            <span>Фильтры {rentFiltersOpen ? '▲' : '▼'}</span>
+            <span>{rentFiltersOpen ? '🔼 Скрыть фильтры' : '🔽 Показать фильтры'}</span>
           </div>
+
           {rentFiltersOpen && (
             <div className="rent-filter-form">
               <div className="rent-filter-row">
