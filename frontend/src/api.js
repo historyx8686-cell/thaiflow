@@ -1,4 +1,4 @@
-const API_BASE = 'http://178.104.230.32/api';
+const API_BASE = 'https://medicine-depending-pace-suggesting.trycloudflare.com/api';
 
 export const api = {
   async getPosts({ city, category, search, page = 1, limit = 20 } = {}) {
