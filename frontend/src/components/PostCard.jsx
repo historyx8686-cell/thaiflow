@@ -17,25 +17,34 @@ const CATEGORY_NAMES = {
   lost_found: '🔍 Потеряно',
 }
 
-// 1. Очистка текста от мусора (** и ссылок)
+// 1. Очистка текста от Markdown (** и ссылок)
 const formatText = (text) => {
   if (!text) return ""
-  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1') // Убираем жирный
-  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Убираем ссылки
-  return clean.replace(/\\n/g, '\n')
+  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1') // Убираем жирный текст
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Убираем ссылки, оставляем только текст
+  clean = clean.replace(/\\n/g, '\n') // Исправляем переносы строк
+  return clean
 }
 
-// 2. Галерея фото (без рандомных картинок)
-function PhotoGrid({ photos }) {
-  if (!photos || !Array.isArray(photos) || photos.length === 0) return null
+// 2. Компонент галереи (теперь ищет фото везде и не показывает рандом)
+function PhotoGrid({ post }) {
+  // Проверяем все возможные поля, где могут лежать картинки
+  const data = post.photos || post.images || []
+  
+  if (!Array.isArray(data) || data.length === 0) return null
 
-  const validPhotos = photos.filter(p => typeof p === 'string' && p.startsWith('http'))
+  // Оставляем только те элементы, которые похожи на ссылки
+  const validPhotos = data.filter(p => {
+    const url = typeof p === 'string' ? p : p?.url
+    return url && url.startsWith('http')
+  })
+
   if (validPhotos.length === 0) return null
 
   const count = validPhotos.length
   let gridClass = 'single'
   if (count === 2) gridClass = 'double'
-  else if (count === 3 || count === 4) gridClass = 'quad'
+  else if (count >= 3 && count <= 4) gridClass = 'quad'
   else if (count >= 5 && count <= 6) gridClass = 'six'
   else if (count >= 7) gridClass = 'nine'
 
@@ -43,22 +52,25 @@ function PhotoGrid({ photos }) {
 
   return (
     <div className={`photos-grid ${gridClass}`}>
-      {displayPhotos.map((photo, i) => (
-        <div key={i} className="photo-wrapper">
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            onError={e => { e.target.closest('.photo-wrapper').style.display = 'none' }}
-          />
-        </div>
-      ))}
+      {displayPhotos.map((photo, i) => {
+        const src = typeof photo === 'string' ? photo : photo.url
+        return (
+          <div key={i} className="photo-wrapper">
+            <img
+              src={src}
+              alt=""
+              loading="lazy"
+              onError={e => { e.target.closest('.photo-wrapper').style.display = 'none' }}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
 
 // 3. Основной компонент карточки
-export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
+export default function PostCard({ post, highlighted, onSave, saved }) {
   const [expanded, setExpanded] = useState(false)
   const isLong = post.text && post.text.length > 200
 
@@ -99,7 +111,7 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
         <div className="post-category-tag">{CATEGORY_NAMES[post.category] || post.category}</div>
       </div>
 
-      <PhotoGrid photos={post.photos} />
+      <PhotoGrid post={post} />
 
       <div className="post-text-wrap">
         <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
@@ -122,11 +134,4 @@ export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
         <button
           className={`action-btn ${saved ? 'saved' : ''}`}
           onClick={() => onSave && onSave(post.id)}
-          title={saved ? 'Убрать из закладок' : 'В закладки'}
-        >
-          🔖
-        </button>
-      </div>
-    </div>
-  )
-}
+          title={saved ? '
