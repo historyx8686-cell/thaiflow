@@ -65,6 +65,20 @@ function PhotoGrid({ photos }) {
     </div>
   )
 }
+const formatText = (text) => {
+  if (!text) return ""
+  
+  // 1. Убираем жирный текст (звездочки)
+  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
+  
+  // 2. Убираем ссылки Markdown [текст](ссылка), оставляя только текст
+  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+  
+  // 3. Убираем лишние системные символы, если остались
+  clean = clean.replace(/\\n/g, '\n')
+  
+  return clean
+}
 
 export default function PostCard({ post, highlighted, tgUser, onSave, saved }) {
   const [expanded, setExpanded] = useState(false)
