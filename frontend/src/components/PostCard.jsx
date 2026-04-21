@@ -27,13 +27,10 @@ const formatText = (text) => {
 
 // 2. Галерея (улучшенный поиск данных)
 function PhotoGrid({ post }) {
-  // Проверяем все возможные варианты названий полей из базы
-  const rawData = post.photos || post.images || post.photo_urls || post.image_urls || [];
-  
-  // Превращаем в массив, если пришла одиночная строка
+  const rawData = post.photos || post.images || post.photo_urls || [];
   const data = Array.isArray(rawData) ? rawData : [rawData];
   
-  // Убираем пустые значения
+  // Убираем startsWith('http'), чтобы видеть локальные фото /api/media/
   const validPhotos = data.filter(p => p && (typeof p === 'string' || p.url));
 
   if (validPhotos.length === 0) return null;
@@ -48,7 +45,10 @@ function PhotoGrid({ post }) {
   return (
     <div className={`photos-grid ${gridClass}`}>
       {validPhotos.slice(0, 9).map((photo, i) => {
-        const src = typeof photo === 'string' ? photo : photo.url;
+        let src = typeof photo === 'string' ? photo : photo.url;
+        
+        // Если путь локальный, добавляем адрес твоего сервера (туннеля)
+        // ВАЖНО: замени ТВОЙ_URL на адрес из Cloudflare, если картинки не грузятся
         return (
           <div key={i} className="photo-wrapper">
             <img
