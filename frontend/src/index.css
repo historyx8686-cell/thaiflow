@@ -1,8 +1,8 @@
 :root {
-  --bg: #111111;
-  --card: #1c1c1e;
+  --bg: #0b0e11;
+  --card: #15191d;
   --text: #ffffff;
-  --accent: #0088cc; /* Телеграм-синий */
+  --accent: #248b9f;
   --hint: #8e8e93;
 }
 
@@ -14,14 +14,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Контейнер приложения */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* Шапка */
+/* Header */
 .header {
   padding: 12px 16px;
   display: flex;
@@ -30,65 +23,81 @@ body {
   background: var(--bg);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
 }
 
 .logo-text { font-weight: 800; font-size: 20px; }
 .logo-text span { color: var(--accent); }
 
-/* Лента и фильтры */
-.feed-container { padding: 0 16px 80px; }
-
+/* Фильтры-пилюли (как на скриншоте) */
 .filter-bar {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 10px 0;
+  padding: 8px 16px;
   scrollbar-width: none;
 }
 .filter-bar::-webkit-scrollbar { display: none; }
 
 .filter-chip {
-  background: var(--card);
-  border: none;
+  background: #1c2127;
+  border: 1px solid #2c343d;
   color: var(--text);
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 20px;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 13px;
+  cursor: pointer;
 }
-.filter-chip.active { background: var(--accent); }
+.filter-chip.active { background: var(--accent); border-color: var(--accent); }
 
-/* Карточка объявления */
+/* Лента объявлений */
+.feed-container { padding: 0 12px 100px; }
+
 .post-card {
   background: var(--card);
   border-radius: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #2c343d;
   overflow: hidden;
 }
 
-.post-header { padding: 12px; display: flex; gap: 10px; align-items: center; }
-.post-avatar { width: 32px; height: 32px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.post-username { font-weight: 600; font-size: 14px; }
+.post-header { padding: 12px; display: flex; align-items: center; justify-content: space-between; }
+.post-user-info { display: flex; align-items: center; gap: 10px; }
+.post-avatar { width: 32px; height: 32px; background: #248b9f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-.post-text { padding: 0 12px 12px; font-size: 15px; line-height: 1.4; }
+.post-category-badge {
+  background: rgba(36, 139, 159, 0.2);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+}
 
-.photos-grid { display: grid; gap: 2px; background: #000; aspect-ratio: 16/9; }
+.post-text { padding: 0 12px 12px; font-size: 14px; line-height: 1.5; color: #e1e1e1; white-space: pre-wrap; }
+
+/* Фото */
+.photos-grid { background: #000; width: 100%; aspect-ratio: 16/9; margin-bottom: 10px; }
 .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
-.post-actions { padding: 12px; display: flex; gap: 8px; }
-.tg-btn { flex: 1; background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 600; text-decoration: none; text-align: center; }
+/* Кнопки действий */
+.post-actions { padding: 0 12px 12px; display: flex; gap: 8px; }
+.tg-btn { 
+  flex: 1; background: var(--accent); color: #fff; border: none; 
+  padding: 10px; border-radius: 10px; font-weight: 600; 
+  text-decoration: none; text-align: center; font-size: 13px;
+}
+.save-btn { background: #2c343d; border: none; padding: 10px; border-radius: 10px; color: #fff; width: 44px; }
 
-/* Нижнее меню */
+/* Навигация снизу */
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: rgba(28, 28, 30, 0.95);
+  background: rgba(21, 25, 29, 0.95);
   backdrop-filter: blur(10px);
   display: flex;
   padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-  border-top: 1px solid #333;
+  border-top: 1px solid #2c343d;
 }
 .nav-item { flex: 1; background: none; border: none; color: var(--hint); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; }
-.nav-item.active { color: var(--text); }
-.nav-icon { font-size: 20px; }
+.nav-item.active { color: #fff; }
