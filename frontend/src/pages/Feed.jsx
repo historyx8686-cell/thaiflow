@@ -15,42 +15,43 @@ const CATEGORIES = [
 
 export default function Feed({ city }) {
   const [posts, setPosts] = useState([])
-  const [filter, setFilter] = useState('all') // Возвращаем 'all', чтобы лента не была пустой
+  const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loading, setLoading] = useState(true)
-
-  // Ждем полсекунды после того как пользователь перестал печатать, чтобы не спамить сервер
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
 
   useEffect(() => {
     const API = import.meta.env.VITE_API_URL || ''
+    
     async function load() {
       setLoading(true)
       try {
-        // Формируем умный запрос к бэкенду
-        const url = new URL(`${API}/api/posts`)
-        url.searchParams.append('city', city)
-        if (filter !== 'all') url.searchParams.append('category', filter)
-        if (debouncedSearch) url.searchParams.append('search', debouncedSearch)
+        // Безопасное формирование ссылки без вызова ошибки Invalid URL
+        let url = `${API}/api/posts?city=${city}`
+        if (filter !== 'all') url += `&category=${filter}`
+        if (searchQuery) url += `&search=${searchQuery}`
 
-        const r = await fetch(url.toString())
+        const r = await fetch(url)
         if (r.ok) {
           const d = await r.json()
-          setPosts(d || [])
+          // ГЛАВНАЯ ЗАЩИТА ОТ КРАША: проверяем, что сервер вернул массив
+          setPosts(Array.isArray(d) ? d : []) 
+        } else {
+          setPosts([]) // Если сервер выдал 404 или 500
         }
-      } catch (e) { console.error("Ошибка загрузки постов:", e) }
-      finally { setLoading(false) }
+      } catch (e) {
+        console.error("Fetch error:", e)
+        setPosts([])
+      } finally {
+        setLoading(false)
+      }
     }
-    load()
-  }, [city, filter, debouncedSearch]) // Перезагружаем при смене города, фильтра или поиска
+    
+    const timer = setTimeout(() => load(), 300)
+    return () => clearTimeout(timer)
+  }, [city, filter, searchQuery])
 
   return (
     <div className="feed-container">
-      {/* Строка поиска */}
       <div className="search-box">
         <span>🔍</span>
         <input 
@@ -61,7 +62,6 @@ export default function Feed({ city }) {
         />
       </div>
 
-      {/* Фильтры категорий */}
       <div className="filter-bar">
         {CATEGORIES.map(cat => (
           <button 
@@ -74,7 +74,6 @@ export default function Feed({ city }) {
         ))}
       </div>
 
-      {/* Рекламный блок */}
       <div className="ad-banner">
         <div className="ad-label">Реклама</div>
         <div className="ad-title">@thaiflow_ads</div>
@@ -89,9 +88,9 @@ export default function Feed({ city }) {
         <div className="posts-list">
           {posts.map(p => (
             <PostCard 
-              key={p.id} 
+              key={p?.id || Math.random()} 
               post={p} 
-              categoryLabel={CATEGORIES.find(c => c.id === p.category)?.label || 'Объявление'} 
+              categoryLabel={CATEGORIES.find(c => c.id === p?.category)?.label || 'Объявление'} 
             />
           ))}
         </div>
