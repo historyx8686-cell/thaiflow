@@ -29,7 +29,7 @@ function PhotoGrid({ post }) {
 export default function PostCard({ post, categoryLabel }) {
   const [expanded, setExpanded] = useState(false)
   
-  // ЗАЩИТА: Если пост почему-то пустой, просто не рисуем его, но не ломаем весь сайт!
+  // ЗАЩИТА ОТ ЧЕРНОГО ЭКРАНА: Если пост пустой, он просто не нарисуется, но сайт не упадет
   if (!post) return null;
 
   const text = post.text || ""
