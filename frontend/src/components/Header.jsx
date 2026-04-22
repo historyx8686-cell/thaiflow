@@ -16,7 +16,7 @@ const MENU_ITEMS = [
   { id: 'contacts', icon: '📧', label: 'Контакты' },
 ]
 
-// Компонент модального окна (открывается при клике на пункт меню)
+// Компонент модального окна
 function ModalSheet({ title, onClose, children }) {
   return (
     <>
@@ -104,3 +104,9 @@ export default function Header({ city, setCity, theme, setTheme }) {
       {/* Отрисовка выбранного меню */}
       {activeModal && (
         <ModalSheet title={MENU_ITEMS.find(m => m.id === activeModal)?.label} onClose={() => setActiveModal(null)}>
+          <p style={{color: 'var(--text-muted)'}}>Содержимое раздела в разработке 🛠️</p>
+        </ModalSheet>
+      )}
+    </>
+  )
+}
