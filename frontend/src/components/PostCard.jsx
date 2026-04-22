@@ -2,35 +2,15 @@ import { useState } from 'react'
 
 const CATEGORY_NAMES = {
   rent: '🏠 Аренда',
-  bike_rent: '🛵 Байк',
-  bike_sale: '💰 Продажа байка',
-  flea_market: '🛒 Барахолка',
-  events: '🎉 Афиша',
-  car_rent: '🚗 Машина',
-  job: '👷 Работа',
-  services: '🔧 Услуги',
-  sport: '🏃 Спорт',
-  health: '🏥 Здоровье',
+  bike_rent: '🏍️ Байки',
   news: '📰 Новости',
-  visa: '🎫 Виза',
-  exchange: '💱 Обмен',
-  lost_found: '🔍 Потеряно',
+  visa: '🛂 Виза',
+  other: '✨ Прочее'
 }
 
-// 1. Очистка текста
-const formatText = (text) => {
-  if (!text) return ""
-  let clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
-  clean = clean.replace(/\[(.*?)\]\((.*?)\)/g, '$1')
-  return clean.replace(/\\n/g, '\n')
-}
-
-// 2. Галерея (улучшенный поиск данных)
 function PhotoGrid({ post }) {
   const rawData = post.photos || post.images || post.photo_urls || [];
   const data = Array.isArray(rawData) ? rawData : [rawData];
-  
-  // Убираем startsWith('http'), чтобы видеть локальные фото /api/media/
   const validPhotos = data.filter(p => p && (typeof p === 'string' || p.url));
 
   if (validPhotos.length === 0) return null;
@@ -42,13 +22,15 @@ function PhotoGrid({ post }) {
   else if (count >= 5 && count <= 6) gridClass = 'six';
   else if (count >= 7) gridClass = 'nine';
 
+  const BACKEND_URL = import.meta.env.VITE_API_URL || '';
+
   return (
     <div className={`photos-grid ${gridClass}`}>
       {validPhotos.slice(0, 9).map((photo, i) => {
         let src = typeof photo === 'string' ? photo : photo.url;
-        
-        // Если путь локальный, добавляем адрес твоего сервера (туннеля)
-        // ВАЖНО: замени ТВОЙ_URL на адрес из Cloudflare, если картинки не грузятся
+        if (src.startsWith('/api/')) {
+          src = `${BACKEND_URL}${src}`;
+        }
         return (
           <div key={i} className="photo-wrapper">
             <img
@@ -65,41 +47,43 @@ function PhotoGrid({ post }) {
 }
 
 export default function PostCard({ post, highlighted, onSave, saved }) {
-  const [expanded, setExpanded] = useState(false)
-  const isLong = post.text && post.text.length > 200
+  const [expanded, setExpanded] = useState(false);
+  const text = post.text || "";
+  const isLong = text.length > 250;
 
   const formattedDate = post.posted_at
     ? new Date(post.posted_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-    : ''
+    : '';
 
-  const avatarLetter = (post.source_group || 'T')[0].toUpperCase()
+  const avatarLetter = (post.source_group || 'T')[0].toUpperCase();
 
   const openInTelegram = () => {
-    if (!post.tg_link) return
+    if (!post.tg_link) return;
     if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.openTelegramLink(post.tg_link)
+      window.Telegram.WebApp.openTelegramLink(post.tg_link);
     } else {
-      window.open(post.tg_link, '_blank')
+      window.open(post.tg_link, '_blank');
     }
-  }
+  };
 
   return (
     <div className={`post-card ${highlighted ? 'highlighted' : ''}`}>
       <div className="post-header">
         <div className="post-avatar">{avatarLetter}</div>
         <div className="post-source">
-          <div className="post-username">@{post.source_group}</div>
+          <div className="post-username">@{post.source_group || 'channel'}</div>
           <div className="post-date">{formattedDate}</div>
         </div>
-        <div className="post-category-tag">{CATEGORY_NAMES[post.category] || post.category}</div>
+        <div className="post-category-tag">
+          {CATEGORY_NAMES[post.category] || post.category}
+        </div>
       </div>
 
-      {/* Вызываем галерею */}
       <PhotoGrid post={post} />
 
       <div className="post-text-wrap">
-        <div className={`post-text ${isLong && !expanded ? 'collapsed' : ''}`}>
-          {expanded ? formatText(post.text) : formatText(post.text).slice(0, 200) + (isLong ? '...' : '')}
+        <div className="post-text">
+          {expanded ? text : text.slice(0, 250) + (isLong && !expanded ? '...' : '')}
         </div>
         {isLong && (
           <button className="show-more-btn" onClick={() => setExpanded(!expanded)}>
@@ -116,9 +100,9 @@ export default function PostCard({ post, highlighted, onSave, saved }) {
           className={`action-btn ${saved ? 'saved' : ''}`}
           onClick={() => onSave && onSave(post.id)}
         >
-          🔖
+          {saved ? '🔖' : '📑'}
         </button>
       </div>
     </div>
-  )
+  );
 }
