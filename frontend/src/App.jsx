@@ -4,26 +4,31 @@ import Feed from './pages/Feed'
 
 export default function App() {
   const [city, setCity] = useState('pattaya')
-  const [theme, setTheme] = useState('dark') // Состояние темы
+  const [theme, setTheme] = useState('dark') // Начальная тема ВСЕГДА темная
   const [activeTab, setActiveTab] = useState('feed')
 
-  // Синхронизация с Telegram (если открыто в боте)
   useEffect(() => {
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp
       tg.ready()
       tg.expand()
-      if (tg.colorScheme) setTheme(tg.colorScheme)
+      // Я убрал привязку к теме Telegram (tg.colorScheme). 
+      // Теперь приложение всегда стартует темным.
     }
   }, [])
 
   return (
-    // ВАЖНО: передаем тему через data-theme
     <div className="app-container" data-theme={theme}>
       <Header city={city} setCity={setCity} theme={theme} setTheme={setTheme} />
       
       <main style={{ flex: 1 }}>
-        {activeTab === 'feed' ? <Feed city={city} /> : <div className="placeholder">Витрина в разработке</div>}
+        {activeTab === 'feed' ? (
+          <Feed city={city} />
+        ) : (
+          <div style={{padding: 40, textAlign: 'center', color: 'var(--text-muted)'}}>
+            Витрина в разработке 🛠️
+          </div>
+        )}
       </main>
 
       <nav className="bottom-nav">
