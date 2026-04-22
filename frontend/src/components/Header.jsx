@@ -10,10 +10,13 @@ const MENU_ITEMS = [
   { id: 'profile', icon: '👤', label: 'Мой профиль' },
   { id: 'about', icon: '📖', label: 'О сервисе' },
   { id: 'channels', icon: '📢', label: 'Каналы' },
+  { id: 'privacy', icon: '🔒', label: 'Конфиденциальность' },
+  { id: 'terms', icon: '📋', label: 'Условия использования' },
+  { id: 'support', icon: '❤️', label: 'Поддержать проект' },
   { id: 'contacts', icon: '📧', label: 'Контакты' },
 ]
 
-// Компонент всплывающего окна для меню
+// Компонент модального окна (открывается при клике на пункт меню)
 function ModalSheet({ title, onClose, children }) {
   return (
     <>
@@ -21,7 +24,7 @@ function ModalSheet({ title, onClose, children }) {
       <div className="modal-sheet" style={{position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg-card)', borderRadius: '24px 24px 0 0', padding: '20px', zIndex: 1001, maxHeight: '80vh', overflowY: 'auto'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
           <h2 style={{margin: 0, fontSize: 18}}>{title}</h2>
-          <button onClick={onClose} style={{background: 'none', border: 'none', color: 'var(--text-main)', fontSize: 20}}>✕</button>
+          <button onClick={onClose} style={{background: 'none', border: 'none', color: 'var(--text-main)', fontSize: 20, cursor: 'pointer'}}>✕</button>
         </div>
         <div>{children}</div>
       </div>
@@ -59,7 +62,7 @@ export default function Header({ city, setCity, theme, setTheme }) {
           {/* Выбор города */}
           <div className="city-dropdown" ref={dropdownRef} style={{position: 'relative'}}>
             <button className="control-pill" onClick={() => setCityOpen(!cityOpen)}>
-              {currentCity.emoji} {currentCity.name} ▾
+              {currentCity.emoji} {currentCity.name} {cityOpen ? '▲' : '▼'}
             </button>
             {cityOpen && (
               <div className="burger-dropdown" style={{position: 'absolute', top: 40, right: 0}}>
@@ -80,28 +83,6 @@ export default function Header({ city, setCity, theme, setTheme }) {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {/* Бургер-меню */}
+          {/* Бургер-меню со сменой иконки */}
           <div className="burger-wrap" ref={menuRef}>
-            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
-            {menuOpen && (
-              <div className="burger-dropdown" style={{position: 'absolute', top: 40, right: 0}}>
-                {MENU_ITEMS.map(item => (
-                  <div key={item.id} className="burger-item" onClick={() => { setActiveModal(item.id); setMenuOpen(false) }}>
-                    {item.icon} {item.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Отрисовка выбранного меню */}
-      {activeModal && (
-        <ModalSheet title={MENU_ITEMS.find(m => m.id === activeModal)?.label} onClose={() => setActiveModal(null)}>
-          <p style={{color: 'var(--text-muted)'}}>Раздел в разработке 🛠️</p>
-        </ModalSheet>
-      )}
-    </>
-  )
-}
+            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)} style={{ width
