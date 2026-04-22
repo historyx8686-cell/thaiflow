@@ -25,7 +25,6 @@ export default function Feed({ city }) {
     async function load() {
       setLoading(true)
       try {
-        // Безопасное формирование ссылки без вызова ошибки Invalid URL
         let url = `${API}/api/posts?city=${city}`
         if (filter !== 'all') url += `&category=${filter}`
         if (searchQuery) url += `&search=${searchQuery}`
@@ -33,10 +32,10 @@ export default function Feed({ city }) {
         const r = await fetch(url)
         if (r.ok) {
           const d = await r.json()
-          // ГЛАВНАЯ ЗАЩИТА ОТ КРАША: проверяем, что сервер вернул массив
+          // ГЛАВНАЯ ЗАЩИТА: проверяем, что сервер вернул массив, иначе ставим пустой список
           setPosts(Array.isArray(d) ? d : []) 
         } else {
-          setPosts([]) // Если сервер выдал 404 или 500
+          setPosts([]) 
         }
       } catch (e) {
         console.error("Fetch error:", e)
@@ -86,9 +85,9 @@ export default function Feed({ city }) {
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>Ничего не найдено 🏖️</p>
       ) : (
         <div className="posts-list">
-          {posts.map(p => (
+          {posts.map((p, index) => (
             <PostCard 
-              key={p?.id || Math.random()} 
+              key={p?.id || index} 
               post={p} 
               categoryLabel={CATEGORIES.find(c => c.id === p?.category)?.label || 'Объявление'} 
             />
