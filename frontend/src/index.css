@@ -1,207 +1,94 @@
 :root {
-  --tg-bg: #ffffff;
-  --tg-text: #000000;
-  --tg-hint: #999999;
-  --tg-link: #248b9f;
-  --accent: #248b9f;
-  --card-bg: #f5f5f5;
-  --header-height: 60px;
-}
-
-[data-theme='dark'] {
-  --tg-bg: #1a1a1a;
-  --tg-text: #ffffff;
-  --tg-hint: #aaaaaa;
-  --card-bg: #2d2d2d;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
+  --bg: #111111;
+  --card: #1c1c1e;
+  --text: #ffffff;
+  --accent: #0088cc; /* Телеграм-синий */
+  --hint: #8e8e93;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--tg-bg);
-  color: var(--tg-text);
-  line-height: 1.5;
-  overflow-x: hidden;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
-.header {
-  height: var(--header-height);
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: var(--tg-bg);
-  z-index: 100;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-.header-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 1.2rem;
-}
-
-.header-logo span { color: var(--accent); }
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-/* Кнопки и выпадающие списки */
-.icon-btn, .city-btn {
-  background: var(--card-bg);
-  border: none;
-  padding: 8px 12px;
-  border-radius: 12px;
-  color: var(--tg-text);
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-/* Сетка постов */
-.feed-container {
-  padding: 16px;
-  padding-bottom: 80px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.post-card {
-  background: var(--card-bg);
-  border-radius: 20px;
-  margin-bottom: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.post-header {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.post-avatar {
-  width: 40px;
-  height: 40px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-}
-
-/* Сетка фотографий */
-.photos-grid {
-  display: grid;
-  gap: 2px;
-  background: #000;
-  aspect-ratio: 16 / 9;
-}
-
-.photos-grid.single { grid-template-columns: 1fr; }
-.photos-grid.double { grid-template-columns: 1fr 1fr; }
-.photos-grid.quad { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-
-.photo-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Текст и кнопки */
-.post-text-wrap { padding: 12px 16px; }
-.post-text { font-size: 0.95rem; white-space: pre-wrap; }
-
-.show-more-btn {
-  color: var(--accent);
-  background: none;
-  border: none;
-  font-weight: 600;
-  margin-top: 4px;
-}
-
-.post-actions {
-  padding: 12px 16px;
-  display: flex;
-  gap: 8px;
-}
-
-.tg-btn {
-  flex: 1;
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 12px;
-  text-decoration: none;
-  text-align: center;
-  font-weight: 600;
-}
-
-/* Навигация снизу */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 65px;
-  background: var(--tg-bg);
-  display: flex;
-  border-top: 1px solid rgba(0,0,0,0.1);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nav-item {
-  flex: 1;
+/* Контейнер приложения */
+.app-container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Шапка */
+.header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: var(--tg-hint);
-  background: none;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo-text { font-weight: 800; font-size: 20px; }
+.logo-text span { color: var(--accent); }
+
+/* Лента и фильтры */
+.feed-container { padding: 0 16px 80px; }
+
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  background: var(--card);
   border: none;
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.filter-chip.active { background: var(--accent); }
+
+/* Карточка объявления */
+.post-card {
+  background: var(--card);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
 }
 
-.nav-item.active { color: var(--accent); }
+.post-header { padding: 12px; display: flex; gap: 10px; align-items: center; }
+.post-avatar { width: 32px; height: 32px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.post-username { font-weight: 600; font-size: 14px; }
 
-/* Модальные окна (ModalSheet) */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-}
+.post-text { padding: 0 12px 12px; font-size: 15px; line-height: 1.4; }
 
-.modal-sheet {
+.photos-grid { display: grid; gap: 2px; background: #000; aspect-ratio: 16/9; }
+.photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+.post-actions { padding: 12px; display: flex; gap: 8px; }
+.tg-btn { flex: 1; background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 600; text-decoration: none; text-align: center; }
+
+/* Нижнее меню */
+.bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: var(--tg-bg);
-  border-radius: 24px 24px 0 0;
-  padding: 20px;
-  z-index: 1001;
-  max-height: 80vh;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease-out;
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid #333;
 }
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+.nav-item { flex: 1; background: none; border: none; color: var(--hint); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; }
+.nav-item.active { color: var(--text); }
+.nav-icon { font-size: 20px; }
