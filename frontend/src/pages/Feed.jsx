@@ -12,7 +12,7 @@ const CATEGORIES = [
 
 export default function Feed({ city }) {
   const [posts, setPosts] = useState([])
-  const [filter, setFilter] = useState('services') // По умолчанию Услуги, как на скрине
+  const [filter, setFilter] = useState('services')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -32,7 +32,6 @@ export default function Feed({ city }) {
 
   return (
     <div className="feed-container">
-      {/* Строка поиска */}
       <div className="search-box">
         <span>🔍</span>
         <input 
@@ -43,7 +42,6 @@ export default function Feed({ city }) {
         />
       </div>
 
-      {/* Фильтры */}
       <div className="filter-bar">
         {CATEGORIES.map(cat => (
           <button 
@@ -56,20 +54,17 @@ export default function Feed({ city }) {
         ))}
       </div>
 
-      {/* Рекламный блок в точности как на скрине */}
       <div className="ad-banner">
         <div className="ad-label">Реклама</div>
         <div className="ad-title">@thaiflow_ads</div>
-        <div className="ad-desc">📢 Разместите рекламу в ThaiFlow — охват 10,000+ ... ↗</div>
+        <div className="ad-desc">📢 Разместите рекламу в ThaiFlow — охват 10,000+</div>
       </div>
-
-      <div className="date-separator">Сегодня</div>
 
       {loading ? (
         <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Загрузка...</p>
       ) : (
         <div className="posts-list">
-          {posts.map(p => <PostCard key={p.id} post={p} categoryLabel={CATEGORIES.find(c => c.id === filter)?.label || 'Услуги'} />)}
+          {posts.map(p => <PostCard key={p.id} post={p} categoryLabel={CATEGORIES.find(c => c.id === filter)?.label} />)}
         </div>
       )}
     </div>
