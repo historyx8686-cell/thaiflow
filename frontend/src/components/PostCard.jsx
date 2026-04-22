@@ -1,10 +1,9 @@
 import { useState } from 'react'
 
 function PhotoGrid({ post }) {
-  const raw = post.photos || post.images || []
+  const raw = post?.photos || post?.images || []
   const photos = Array.isArray(raw) ? raw : [raw]
   
-  // БЕЗОПАСНАЯ ПРОВЕРКА: отсекаем пустые или кривые ссылки, чтобы не сломать сайт
   const validPhotos = photos.filter(p => p && (typeof p === 'string' || p.url))
   if (validPhotos.length === 0) return null
   
@@ -19,7 +18,7 @@ function PhotoGrid({ post }) {
         }
         return (
           <div key={i} className="photo-wrapper">
-            <img src={src} alt="" />
+            <img src={src} alt="photo" />
           </div>
         )
       })}
@@ -29,6 +28,10 @@ function PhotoGrid({ post }) {
 
 export default function PostCard({ post, categoryLabel }) {
   const [expanded, setExpanded] = useState(false)
+  
+  // ЗАЩИТА: Если пост почему-то пустой, просто не рисуем его, но не ломаем весь сайт!
+  if (!post) return null;
+
   const text = post.text || ""
   const isLong = text.length > 250
 
@@ -36,7 +39,9 @@ export default function PostCard({ post, categoryLabel }) {
     ? new Date(post.posted_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) 
     : '12:00'
 
-  const avatarInitial = (post.source_group || 'A')[0].toUpperCase()
+  const avatarInitial = (post.source_group && typeof post.source_group === 'string') 
+    ? post.source_group[0].toUpperCase() 
+    : 'A'
 
   return (
     <div className="post-card">
