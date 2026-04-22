@@ -2,15 +2,13 @@ import { useState, useEffect } from 'react'
 import PostCard from '../components/PostCard'
 
 const CATEGORIES = [
-  { id: 'all', label: '🏠 Все' },
+  { id: 'all', label: '📋 Все' },
   { id: 'rent', label: '🏠 Аренда' },
-  { id: 'bike_rent', label: '🏍️ Аренда байков' },
-  { id: 'job', label: '👨‍💻 Работа' },
+  { id: 'bike_rent', label: '🛵 Аренда байков' },
+  { id: 'job', label: '👷 Работа' },
   { id: 'services', label: '🔧 Услуги' },
   { id: 'sport', label: '🏃 Спорт' },
-  { id: 'health', label: '🏥 Здоровье' },
-  { id: 'news', label: '📰 Новости' },
-  { id: 'visa', label: '🛂 Виза' }
+  { id: 'news', label: '📰 Новости' }
 ]
 
 export default function Feed({ city }) {
@@ -20,34 +18,33 @@ export default function Feed({ city }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const API = import.meta.env.VITE_API_URL || ''
-    
-    async function load() {
+    async function loadPosts() {
       setLoading(true)
       try {
+        const API = import.meta.env.VITE_API_URL || ''
         let url = `${API}/api/posts?city=${city}`
         if (filter !== 'all') url += `&category=${filter}`
-        if (searchQuery) url += `&search=${searchQuery}`
-
-        const r = await fetch(url)
-        if (r.ok) {
-          const d = await r.json()
-          // ГЛАВНАЯ ЗАЩИТА: проверяем, что сервер вернул массив, иначе ставим пустой список
-          setPosts(Array.isArray(d) ? d : []) 
+        
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          // Строгая проверка, чтобы React не падал
+          setPosts(Array.isArray(data) ? data : (data?.items || []))
         } else {
-          setPosts([]) 
+          setPosts([])
         }
-      } catch (e) {
-        console.error("Fetch error:", e)
+      } catch (error) {
+        console.error("Ошибка:", error)
         setPosts([])
       } finally {
         setLoading(false)
       }
     }
     
-    const timer = setTimeout(() => load(), 300)
+    // Небольшая задержка перед загрузкой
+    const timer = setTimeout(() => loadPosts(), 100)
     return () => clearTimeout(timer)
-  }, [city, filter, searchQuery])
+  }, [city, filter])
 
   return (
     <div className="feed-container">
@@ -80,16 +77,16 @@ export default function Feed({ city }) {
       </div>
 
       {loading ? (
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Загрузка объявлений...</p>
+        <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>Загрузка...</p>
       ) : posts.length === 0 ? (
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>Ничего не найдено 🏖️</p>
+        <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>Объявлений пока нет 🏖️</p>
       ) : (
         <div className="posts-list">
-          {posts.map((p, index) => (
+          {posts.map((post, idx) => (
             <PostCard 
-              key={p?.id || index} 
-              post={p} 
-              categoryLabel={CATEGORIES.find(c => c.id === p?.category)?.label || 'Объявление'} 
+              key={post?.id || idx} 
+              post={post} 
+              categoryLabel={CATEGORIES.find(c => c.id === post?.category)?.label || 'Объявление'} 
             />
           ))}
         </div>
