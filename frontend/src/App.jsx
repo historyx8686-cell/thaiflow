@@ -1,58 +1,62 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
-import Header from './components/Header.jsx'
-import BottomNav from './components/BottomNav.jsx'
-import Feed from './pages/Feed.jsx'
-import Showcase from './pages/Showcase.jsx'
+import Header from './components/Header'
+import Feed from './pages/Feed'
 
-function AppInner() {
-  const [tgUser, setTgUser] = useState(null)
+export default function App() {
   const [city, setCity] = useState('pattaya')
   const [theme, setTheme] = useState('dark')
-  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('feed') // 'feed' или 'showcase'
+  const [tgUser, setTgUser] = useState(null)
 
+  // Инициализация Telegram WebApp
   useEffect(() => {
-    // Initialize Telegram WebApp
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp
       tg.ready()
       tg.expand()
-
-      if (tg.initDataUnsafe?.user) {
-        setTgUser(tg.initDataUnsafe.user)
-      }
+      setTgUser(tg.initDataUnsafe?.user || null)
+      // Синхронизируем тему с Telegram
+      setTheme(tg.colorScheme || 'dark')
     }
-
-    // Handle deeplinks
-    const params = new URLSearchParams(window.location.search)
-    const postId = params.get('post')
-    if (postId) {
-      navigate(`/?post=${postId}`)
-    }
-  }, [navigate])
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+  }, [])
 
   return (
-    <div className="app" data-theme={theme}>
-      <Header city={city} setCity={setCity} theme={theme} setTheme={setTheme} tgUser={tgUser} />
+    <div className="app-container" data-theme={theme}>
+      <Header 
+        city={city} 
+        setCity={setCity} 
+        theme={theme} 
+        setTheme={setTheme}
+        tgUser={tgUser}
+      />
+      
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Feed city={city} tgUser={tgUser} />} />
-          <Route path="/showcase" element={<Showcase city={city} tgUser={tgUser} />} />
-        </Routes>
+        {activeTab === 'feed' ? (
+          <Feed city={city} tgUser={tgUser} />
+        ) : (
+          <div className="showcase-placeholder">
+            <h2>Витрина в разработке 🏗️</h2>
+            <p>Скоро здесь будут лучшие заведения {city === 'pattaya' ? 'Паттайи' : 'Таиланда'}</p>
+          </div>
+        )}
       </main>
-      <BottomNav />
-    </div>
-  )
-}
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <AppInner />
-    </BrowserRouter>
+      <nav className="bottom-nav">
+        <button 
+          className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`}
+          onClick={() => setActiveTab('feed')}
+        >
+          <span className="nav-icon">📜</span>
+          <span>Лента</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'showcase' ? 'active' : ''}`}
+          onClick={() => setActiveTab('showcase')}
+        >
+          <span className="nav-icon">🏛️</span>
+          <span>Витрина</span>
+        </button>
+      </nav>
+    </div>
   )
 }
