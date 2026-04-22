@@ -85,4 +85,22 @@ export default function Header({ city, setCity, theme, setTheme }) {
 
           {/* Бургер-меню со сменой иконки */}
           <div className="burger-wrap" ref={menuRef}>
-            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)} style={{ width
+            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)} style={{ width: '36px' }}>
+              {menuOpen ? '✕' : '☰'}
+            </button>
+            {menuOpen && (
+              <div className="burger-dropdown" style={{position: 'absolute', top: 40, right: 0}}>
+                {MENU_ITEMS.map(item => (
+                  <div key={item.id} className="burger-item" onClick={() => { setActiveModal(item.id); setMenuOpen(false) }}>
+                    {item.icon} {item.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Отрисовка выбранного меню */}
+      {activeModal && (
+        <ModalSheet title={MENU_ITEMS.find(m => m.id === activeModal)?.label} onClose={() => setActiveModal(null)}>
