@@ -10,15 +10,24 @@ export default function App() {
     <div className="app-container">
       <Header city={city} setCity={setCity} />
       
-      {activeTab === 'feed' ? <Feed city={city} /> : <div style={{padding: 20}}>Витрина скоро...</div>}
+      <main style={{ flex: 1 }}>
+        {activeTab === 'feed' ? (
+          <Feed city={city} />
+        ) : (
+          <div style={{ padding: 40, textAlign: 'center', color: '#8e8e93' }}>
+            <h2 style={{ color: '#fff' }}>Витрина 🏛️</h2>
+            <p>Скоро здесь будут лучшие заведения Паттайи</p>
+          </div>
+        )}
+      </main>
 
       <nav className="bottom-nav">
         <button className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>
-          <span className="nav-icon">📜</span>
+          <span style={{ fontSize: '20px' }}>📜</span>
           <span>Лента</span>
         </button>
         <button className={`nav-item ${activeTab === 'showcase' ? 'active' : ''}`} onClick={() => setActiveTab('showcase')}>
-          <span className="nav-icon">🏛️</span>
+          <span style={{ fontSize: '20px' }}>🏛️</span>
           <span>Витрина</span>
         </button>
       </nav>
