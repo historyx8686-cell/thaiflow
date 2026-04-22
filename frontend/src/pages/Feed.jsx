@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react'
 import PostCard from '../components/PostCard'
 
 const CATEGORIES = [
-  { id: 'all', label: '🏠 Все' },
+  { id: 'job', label: '👨‍💻 Работа' },
+  { id: 'services', label: '🔧 Услуги' },
+  { id: 'sport', label: '🏃 Спорт' },
+  { id: 'health', label: '🏥 Здоровье' },
   { id: 'rent', label: '🏠 Аренда' },
-  { id: 'bike_rent', label: '🏍️ Байки' },
-  { id: 'news', label: '📰 Новости' },
-  { id: 'visa', label: '🛂 Виза' }
+  { id: 'bike', label: '🏍️ Байки' }
 ]
 
 export default function Feed({ city }) {
   const [posts, setPosts] = useState([])
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('services') // По умолчанию Услуги, как на скрине
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,6 +32,18 @@ export default function Feed({ city }) {
 
   return (
     <div className="feed-container">
+      {/* Строка поиска */}
+      <div className="search-box">
+        <span>🔍</span>
+        <input 
+          type="text" 
+          placeholder="Поиск по объявлениям..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* Фильтры */}
       <div className="filter-bar">
         {CATEGORIES.map(cat => (
           <button 
@@ -42,17 +56,20 @@ export default function Feed({ city }) {
         ))}
       </div>
 
-      <div style={{ background: '#1c2127', padding: '12px', borderRadius: '12px', margin: '10px 0', fontSize: '12px', border: '1px solid #2c343d' }}>
-        <div style={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px' }}>реклама</div>
-        <div style={{ color: '#248b9f', fontWeight: 'bold' }}>@thaiflow_ads</div>
-        <div style={{ marginTop: '4px' }}>📢 Реклама в ThaiFlow — 10,000+ подписчиков</div>
+      {/* Рекламный блок в точности как на скрине */}
+      <div className="ad-banner">
+        <div className="ad-label">Реклама</div>
+        <div className="ad-title">@thaiflow_ads</div>
+        <div className="ad-desc">📢 Разместите рекламу в ThaiFlow — охват 10,000+ ... ↗</div>
       </div>
 
+      <div className="date-separator">Сегодня</div>
+
       {loading ? (
-        <p style={{ textAlign: 'center', marginTop: 40, color: '#8e8e93' }}>Загрузка объявлений...</p>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Загрузка...</p>
       ) : (
         <div className="posts-list">
-          {posts.map(p => <PostCard key={p.id} post={p} />)}
+          {posts.map(p => <PostCard key={p.id} post={p} categoryLabel={CATEGORIES.find(c => c.id === filter)?.label || 'Услуги'} />)}
         </div>
       )}
     </div>
