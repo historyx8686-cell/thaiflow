@@ -16,22 +16,6 @@ const MENU_ITEMS = [
   { id: 'contacts', icon: '📧', label: 'Контакты' },
 ]
 
-// Компонент модального окна
-function ModalSheet({ title, onClose, children }) {
-  return (
-    <>
-      <div className="modal-overlay" onClick={onClose} style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000}} />
-      <div className="modal-sheet" style={{position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg-card)', borderRadius: '24px 24px 0 0', padding: '20px', zIndex: 1001, maxHeight: '80vh', overflowY: 'auto'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
-          <h2 style={{margin: 0, fontSize: 18}}>{title}</h2>
-          <button onClick={onClose} style={{background: 'none', border: 'none', color: 'var(--text-main)', fontSize: 20, cursor: 'pointer'}}>✕</button>
-        </div>
-        <div>{children}</div>
-      </div>
-    </>
-  )
-}
-
 export default function Header({ city, setCity, theme, setTheme }) {
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -59,7 +43,6 @@ export default function Header({ city, setCity, theme, setTheme }) {
         </div>
         
         <div className="header-actions">
-          {/* Выбор города */}
           <div className="city-dropdown" ref={dropdownRef} style={{position: 'relative'}}>
             <button className="control-pill" onClick={() => setCityOpen(!cityOpen)}>
               {currentCity.emoji} {currentCity.name} {cityOpen ? '▲' : '▼'}
@@ -75,7 +58,6 @@ export default function Header({ city, setCity, theme, setTheme }) {
             )}
           </div>
 
-          {/* Переключатель темы */}
           <button 
             className="control-pill" 
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -83,9 +65,8 @@ export default function Header({ city, setCity, theme, setTheme }) {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {/* Бургер-меню со сменой иконки */}
           <div className="burger-wrap" ref={menuRef}>
-            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)} style={{ width: '36px' }}>
+            <button className="control-pill" onClick={() => setMenuOpen(!menuOpen)} style={{ width: '36px', padding: 0 }}>
               {menuOpen ? '✕' : '☰'}
             </button>
             {menuOpen && (
@@ -101,11 +82,19 @@ export default function Header({ city, setCity, theme, setTheme }) {
         </div>
       </header>
 
-      {/* Отрисовка выбранного меню */}
       {activeModal && (
-        <ModalSheet title={MENU_ITEMS.find(m => m.id === activeModal)?.label} onClose={() => setActiveModal(null)}>
-          <p style={{color: 'var(--text-muted)'}}>Содержимое раздела в разработке 🛠️</p>
-        </ModalSheet>
+        <>
+          <div className="modal-overlay" onClick={() => setActiveModal(null)} style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000}} />
+          <div className="modal-sheet" style={{position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg-card)', borderRadius: '24px 24px 0 0', padding: '20px', zIndex: 1001, maxHeight: '80vh', overflowY: 'auto'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
+              <h2 style={{margin: 0, fontSize: 18}}>{MENU_ITEMS.find(m => m.id === activeModal)?.label}</h2>
+              <button onClick={() => setActiveModal(null)} style={{background: 'none', border: 'none', color: 'var(--text-main)', fontSize: 20, cursor: 'pointer'}}>✕</button>
+            </div>
+            <div>
+              <p style={{color: 'var(--text-muted)'}}>Содержимое раздела в разработке 🛠️</p>
+            </div>
+          </div>
+        </>
       )}
     </>
   )
