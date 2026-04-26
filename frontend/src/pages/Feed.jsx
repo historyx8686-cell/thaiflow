@@ -9,7 +9,7 @@ const CATEGORIES = [
   { id: 'services', label: '🔧 Услуги' }
 ]
 
-export default function Feed({ city }) {
+export default function Feed({ city }: { city: string }) {
   const [posts, setPosts] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -20,7 +20,6 @@ export default function Feed({ city }) {
       try {
         const API = import.meta.env.VITE_API_URL || ''
         const response = await fetch(`${API}/api/posts?city=${city}&category=${filter}`)
-        
         if (response.ok) {
           const data = await response.json()
           setPosts(Array.isArray(data) ? data : [])
@@ -28,13 +27,12 @@ export default function Feed({ city }) {
           setPosts([])
         }
       } catch (error) {
-        console.error("Ошибка загрузки:", error)
+        console.error('Ошибка загрузки:', error)
         setPosts([])
       } finally {
         setLoading(false)
       }
     }
-    
     loadPosts()
   }, [city, filter])
 
@@ -42,8 +40,8 @@ export default function Feed({ city }) {
     <div className="feed-container">
       <div className="filter-bar">
         {CATEGORIES.map(cat => (
-          <button 
-            key={cat.id} 
+          <button
+            key={cat.id}
             className={`filter-chip ${filter === cat.id ? 'active' : ''}`}
             onClick={() => setFilter(cat.id)}
           >
@@ -58,7 +56,7 @@ export default function Feed({ city }) {
         <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Нет объявлений</p>
       ) : (
         <div className="posts-list">
-          {posts.map((post, idx) => (
+          {posts.map((post: any, idx) => (
             <PostCard key={idx} post={post} />
           ))}
         </div>
