@@ -4,11 +4,8 @@ import Feed from './pages/Feed'
 
 export default function App() {
   const [city, setCity] = useState('pattaya')
-  const [theme, setTheme] = useState('dark')
-  const [activeTab, setActiveTab] = useState('feed')
 
   useEffect(() => {
-    // Инициализация Telegram
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready()
       window.Telegram.WebApp.expand()
@@ -16,26 +13,19 @@ export default function App() {
   }, [])
 
   return (
-    <div className="app-container" data-theme={theme}>
-      <Header city={city} setCity={setCity} theme={theme} setTheme={setTheme} />
+    <div className="app-container" data-theme="dark">
+      <Header city={city} setCity={setCity} />
       
       <main style={{ flex: 1, paddingBottom: '80px' }}>
-        {activeTab === 'feed' ? (
-          <Feed city={city} />
-        ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-            <h2>Витрина 🏛️</h2>
-            <p>В разработке</p>
-          </div>
-        )}
+        <Feed city={city} />
       </main>
 
       <nav className="bottom-nav">
-        <button className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>
+        <button className="nav-item active">
           <span className="nav-icon">📜</span>
           <span>Лента</span>
         </button>
-        <button className={`nav-item ${activeTab === 'showcase' ? 'active' : ''}`} onClick={() => setActiveTab('showcase')}>
+        <button className="nav-item">
           <span className="nav-icon">🏛️</span>
           <span>Витрина</span>
         </button>
